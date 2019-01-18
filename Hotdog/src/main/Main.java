@@ -2,23 +2,30 @@ package main;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Component;
+import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.text.DecimalFormat;
 import java.util.HashMap;
 
 import javax.swing.JButton;
+import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
-public class Main
+public final class Main
 {
-	JFrame frame;
-	JPanel menu;
+	private JFrame frame;
+	private JPanel menu;
+	private static DecimalFormat df;
 	
 	public static void main(String[] args)
 	{
+		df = new DecimalFormat("0.00");
 		new Main();
 	}
 	
@@ -30,14 +37,34 @@ public class Main
 	
 	private void setupMenu()
 	{
-		menu = new JPanel(new GridLayout(0, 3, 5, 0));
+		menu = new JPanel(new GridLayout(0, 3, 5, 5));
 		for(Foods cur : Foods.values())
 		{
+			addListenersToComponents(cur.panel, new UpdateListener());
 			menu.add(cur.panel);
 		}
 		frame.add(menu, BorderLayout.CENTER);
+		frame.pack();
+		frame.repaint();
 	}
 	
+	public static void addListenersToComponents(Container parent, ActionListener listener)
+	{
+		for(Component comp : parent.getComponents())
+		{
+			if(comp instanceof JButton)
+			{
+				JButton btn = (JButton)comp;
+				btn.addActionListener(listener);
+			}
+			else if(comp instanceof Container)
+			{
+				Container parent2 = (Container)comp;
+				addListenersToComponents(parent2, listener);
+			}
+		}
+	}
+
 	private void initFrame()
 	{
 		frame = new JFrame("Hotdog");
@@ -53,7 +80,7 @@ public class Main
 	public static enum Foods
 	{
 		//TODO Fix prices and names
-		hotdog("Hotdog", 1), burger("Hamburger", 1), fries("Fries", 1);
+		hotdog("Hotdog", 2.5f), burger("Hamburger", 5), fries("Fries", 2), brat("Brat", 3.5f), soda("Soda", 2), water("Water", 0);
 		
 		private static HashMap<String, Foods> map = new HashMap<>();
 		
@@ -61,14 +88,13 @@ public class Main
 		private String str;
 		private float price;
 		private JPanel panel;
-		private JLabel name;
 		private JButton addBtn, subBtn;
 		
 		private Foods(String str, float price)
 		{
 			this.str = str;
 			this.price = price;
-			addBtn = new JButton("Add");
+			addBtn = new JButton("+");
 			addBtn.addActionListener((ActionEvent e) -> 
 			{
 				JButton source = (JButton)e.getSource();
@@ -78,7 +104,7 @@ public class Main
 			addBtn.setActionCommand(str);
 			addBtn.setEnabled(true);
 			
-			subBtn = new JButton("Subtract");
+			subBtn = new JButton("-");
 			subBtn.addActionListener((ActionEvent e) -> 
 			{
 				JButton source = (JButton)e.getSource();
@@ -95,11 +121,17 @@ public class Main
 			buttons.add(addBtn);
 			buttons.add(subBtn);
 			
-			name = new JLabel(str, JLabel.CENTER);
+			JLabel name = new JLabel(str, JLabel.CENTER);
 			name.setBackground(new Color(108, 192, 229));
 			name.setOpaque(true);
+			
+			JLabel priceL = new JLabel('$' + df.format(price), JLabel.CENTER);
+			priceL.setBackground(new Color(108, 192, 229));
+			priceL.setOpaque(true);
+			
 			panel = new JPanel(new GridLayout(0, 1));
 			panel.add(name);
+			panel.add(priceL);
 			panel.add(buttons);
 			panel.setBorder(javax.swing.BorderFactory.createLineBorder(new Color(251, 79, 79), 5));
 			
@@ -127,6 +159,15 @@ public class Main
 		public float getPrice()
 		{
 			return price;
+		}
+	}
+	
+	public class UpdateListener implements ActionListener
+	{
+		public void actionPerformed(ActionEvent e)
+		{
+			frame.pack();
+			frame.repaint();
 		}
 	}
 }
