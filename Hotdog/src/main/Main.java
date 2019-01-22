@@ -19,7 +19,7 @@ import javax.swing.JPanel;
 public final class Main
 {
 	private JFrame frame;
-	private JPanel menu;
+	private JPanel menu, price;
 	private static DecimalFormat df;
 	
 	public static void main(String[] args)
@@ -32,6 +32,13 @@ public final class Main
 	{
 		initFrame();
 		setupMenu();
+		addPricePanel();
+	}
+	
+	public void addPricePanel()
+	{
+		price = new JPanel();
+		
 	}
 	
 	private void setupMenu()
@@ -165,8 +172,13 @@ public final class Main
 	{
 		public void actionPerformed(ActionEvent e)
 		{
-			frame.pack();
-			frame.repaint();
+			if(e.getSource() instanceof JButton)
+			{
+				JButton b = (JButton)e.getSource();
+				System.out.println(Foods.getValue(b.getName()) + ": " +Foods.getValue(b.getName()).count);
+				frame.pack();
+				frame.repaint();
+			}
 		}
 	}
 }
