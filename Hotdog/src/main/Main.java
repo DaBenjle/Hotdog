@@ -12,7 +12,6 @@ import java.text.DecimalFormat;
 import java.util.HashMap;
 
 import javax.swing.JButton;
-import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
