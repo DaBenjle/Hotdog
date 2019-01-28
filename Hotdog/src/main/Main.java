@@ -2,9 +2,8 @@ package main;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.Component;
-import java.awt.Container;
 import java.awt.Dimension;
+import java.awt.Graphics;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -38,37 +37,47 @@ public final class Main
 	public void addPricePanel()
 	{
 		price = new JPanel();
-		
+		price.setLayout(new GridLayout(0, 2));
+		for(Foods fd : Foods.values())
+		{
+			price.add(new PriceLabel(fd));
+		}
+		price.add(new JLabel()
+				{
+					private float getTotal()
+					{
+						float total = 0;
+						for(Foods cur : Foods.values())
+						{
+							total += cur.price * cur.count;
+						}
+						return total;
+					}
+					
+					@Override
+					public void paint(Graphics g)
+					{
+						setText("Total: $" + df.format(getTotal()));
+						super.paint(g);
+					}
+				});
+		frame.add(price, BorderLayout.EAST);
+		frame.pack();
+		frame.repaint();
 	}
 	
 	private void setupMenu()
 	{
+		UpdateListener ul = new UpdateListener();
 		menu = new JPanel(new GridLayout(0, 3, 5, 5));
 		for(Foods cur : Foods.values())
 		{
-			addListenersToComponents(cur.panel, new UpdateListener());
+			cur.setUpdateListener(ul);
 			menu.add(cur.panel);
 		}
 		frame.add(menu, BorderLayout.CENTER);
 		frame.pack();
 		frame.repaint();
-	}
-	
-	public static void addListenersToComponents(Container parent, ActionListener listener)
-	{
-		for(Component comp : parent.getComponents())
-		{
-			if(comp instanceof JButton)
-			{
-				JButton btn = (JButton)comp;
-				btn.addActionListener(listener);
-			}
-			else if(comp instanceof Container)
-			{
-				Container parent2 = (Container)comp;
-				addListenersToComponents(parent2, listener);
-			}
-		}
 	}
 
 	private void initFrame()
@@ -78,15 +87,14 @@ public final class Main
 		frame.setLayout(new BorderLayout());
 		frame.pack();
 		frame.setVisible(true);
-		frame.setSize(new Dimension(1000, 500));
+		frame.setSize(new Dimension(2000, 500));
 		frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
 		frame.repaint();
 	}
 	
 	public static enum Foods
 	{
-		//TODO Fix prices and names
-		hotdog("Hotdog", 2.5f), burger("Hamburger", 5), fries("Fries", 2), brat("Brat", 3.5f), soda("Soda", 2), water("Water", 0);
+		hotdog("Hotdog", 2.5f), burger("Hamburger", 5), test("Test", 96.221f), fries("Fries", 2), brat("Brat", 3.5f), soda("Soda", 2), water("Water", 0);
 		
 		private static HashMap<String, Foods> map = new HashMap<>();
 		
@@ -95,6 +103,7 @@ public final class Main
 		private float price;
 		private JPanel panel;
 		private JButton addBtn, subBtn;
+		private UpdateListener ul = null;
 		
 		private Foods(String str, float price)
 		{
@@ -106,6 +115,14 @@ public final class Main
 				JButton source = (JButton)e.getSource();
 				Foods type = Foods.getValue(source.getActionCommand());
 				type.count++;
+				if(type.ul != null)
+				{
+					ul.actionPerformed(e);
+				}
+				else
+				{
+					System.err.println("");
+				}
 			});
 			addBtn.setActionCommand(str);
 			addBtn.setEnabled(true);
@@ -118,6 +135,14 @@ public final class Main
 				if(type.count > 0)
 				{
 					count--;
+				}
+				if(type.ul != null)
+				{
+					ul.actionPerformed(e);
+				}
+				else
+				{
+					System.err.println("");
 				}
 			});
 			subBtn.setActionCommand(str);
@@ -140,7 +165,6 @@ public final class Main
 			panel.add(priceL);
 			panel.add(buttons);
 			panel.setBorder(javax.swing.BorderFactory.createLineBorder(new Color(251, 79, 79), 5));
-			
 		}
 		
 		static
@@ -166,19 +190,42 @@ public final class Main
 		{
 			return price;
 		}
+		
+		public void setUpdateListener(UpdateListener input)
+		{
+			ul = input;
+		}
 	}
 	
 	public class UpdateListener implements ActionListener
 	{
+		//Repaints entire window, with button press, not just the button
 		public void actionPerformed(ActionEvent e)
 		{
 			if(e.getSource() instanceof JButton)
 			{
 				JButton b = (JButton)e.getSource();
-				System.out.println(Foods.getValue(b.getName()) + ": " +Foods.getValue(b.getName()).count);
 				frame.pack();
 				frame.repaint();
 			}
+		}
+	}
+	
+	public static class PriceLabel extends JLabel
+	{
+		Foods fd;
+		public PriceLabel(Foods fd)
+		{
+			super();
+			this.fd = fd;
+			this.setText(fd.toString() + ": " + fd.count + " at $" + df.format(fd.getPrice()) + " each.");
+		}
+		
+		@Override
+		public void paint(Graphics g)
+		{
+			this.setText(fd.toString() + ": " + fd.count + " at $" + df.format(fd.getPrice()) + " each.");
+			super.paint(g);
 		}
 	}
 }
